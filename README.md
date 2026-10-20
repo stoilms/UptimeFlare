@@ -56,7 +56,9 @@ It has been live on [uptime.promeni.bg](https://uptime.promeni.bg) since October
 
 ## Working on this fork
 
-1. Keep `main` in sync with upstream: "Sync fork" on GitHub, or `git fetch upstream && git merge upstream/main`.
+1. Keep `main` in sync with upstream **locally**: `git fetch upstream && git merge upstream/main`.
+   - `.gitattributes` keeps this README on merges; run `git config merge.ours.driver true` once per clone.
+   - GitHub's "Sync fork" button ignores that rule. If upstream has changed its README, the button reports a conflict and offers to discard this fork's commits. Don't accept; merge locally instead.
 2. Cut each contribution branch from **upstream** `main`: `git checkout -b <branch> upstream/main`.
 3. Bring in the change from the private repo, leaving out its `uptime.config.ts`, `README.md` and any site-specific assets. **Never push deployment configuration to this fork.**
 4. Verify (lint, `tsc`, both builds, a local run), then open a draft PR against `lyc8503/UptimeFlare` and add it to the table above.
