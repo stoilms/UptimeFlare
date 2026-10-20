@@ -1,90 +1,66 @@
-<div align="right">
-  <a title="English" href="README.md"><img src="https://img.shields.io/badge/-English-A31F34?style=for-the-badge" alt="English" /></a>
-  <a title="简体中文" href="README_zh-CN.md"><img src="https://img.shields.io/badge/-%E7%AE%80%E4%BD%93%E4%B8%AD%E6%96%87-545759?style=for-the-badge" alt="简体中文"></a>
-</div>
+# UptimeFlare: Stoil Stoilov's contributions fork
 
-# ✔[UptimeFlare](https://github.com/lyc8503/UptimeFlare)
+This is my public fork of [lyc8503/UptimeFlare](https://github.com/lyc8503/UptimeFlare), the serverless uptime monitoring and status page built on Cloudflare Workers. I use it **only to contribute changes upstream**.
 
-A more advanced, serverless, and free uptime monitoring & status page solution, powered by Cloudflare Workers, complete with a user-friendly interface.
+> This README is specific to the fork and is not meant for upstream. For the project itself (features, quick start, configuration), see the [upstream README](https://github.com/lyc8503/UptimeFlare#readme) and [wiki](https://github.com/lyc8503/UptimeFlare/wiki).
 
-📢 **[[SECURITY ADVISORY](https://github.com/lyc8503/UptimeFlare/security/advisories/GHSA-36q9-v7p3-vj6v) 2026/03/04]** A vulnerability (CVE-2026-29779) that could expose monitor configuration and credentials in `uptime.config.ts` to clients was fixed. Versions between 2025-09-21 (from commit `41257c6`) and 2026-03-04 are affected. **Affected users are strongly advised to upgrade to the latest version.**
+Maintained by **[Stoil Stoilov](https://stoilms.com)** · [stoilms.com](https://stoilms.com) · [LinkedIn](https://www.linkedin.com/in/stoilms) · [GitHub](https://github.com/stoilms)
 
-🎉 **[UPDATE 2026/01/03]** I have just migrated UptimeFlare from KV to D1 Database. I also updated the Terraform Cloudflare provider to v5 and improved the deployment process. The data structure has been optimized to resolve long-standing performance issues.
+## The setup
 
-New users can deploy directly, while existing users can have a simple auto migration process (upgrade docs below)! Feel free to open an issue if you run into any trouble deploying.
+Two repositories, each with its own job:
 
-## ⭐Features
+```mermaid
+flowchart LR
+    U["lyc8503/UptimeFlare<br/>(upstream, public)"]
+    P["promeni-bg/UptimeFlare<br/>(private)"]
+    F["stoilms/UptimeFlare<br/>(this fork, public)"]
+    L(["uptime.promeni.bg"])
 
-- Open-source, easy to deploy (in under 10 minutes, no local tools required), and free
-- Monitoring capabilities
-  - Up to 50 checks at 1-minute intervals
-  - Geo-specific checks from over [310 cities](https://www.cloudflare.com/network/) worldwide
-  - Support for HTTP/HTTPS/TCP port monitoring
-  - Up to 90-day uptime history and uptime percentage tracking
-  - Customizable request methods, headers, and body for HTTP(s)
-  - Custom status code & keyword checks for HTTP(s)
-  - Downtime notification supporting [100+ notification channels](https://github.com/caronc/apprise/wiki)
-  - Customizable Webhook
-  - Multi-language support (English/Chinese)
-- Status page
-  - Interactive ping (response time) chart for all types of monitors
-  - Scheduled maintenances alerts & Incident history page
-  - Responsive UI that adapts to your system theme
-  - Customizable status page
-  - Use your own domain with CNAME
-  - Optional password authentication (private status page)
-  - JSON API for fetching realtime status data
+    U -- "git merge upstream/main" --> P
+    P -- "GitHub Actions deploy<br/>(Terraform + Wrangler)" --> L
+    U -- "branch from upstream/main" --> F
+    F -- "pull requests" --> U
+```
 
-## 👀Demo
+- **The private repo, `promeni-bg/UptimeFlare`,** runs the live status page at **[uptime.promeni.bg](https://uptime.promeni.bg)**. It holds the deployment configuration, which stays private.
+  - It shares git history with upstream, so updates are a normal `git merge upstream/main`.
+  - New features are built and tested there first, behind optional settings.
+  - Every merge to its `main` deploys to Cloudflare: Workers for the checks, D1 for state, Pages for the site.
+- **This public fork** contains no deployment configuration. Each contribution is a branch cut from upstream `main`, carrying only the generic part of a change already running in production. Each one is opened as a pull request against upstream.
 
-My status page (Online demo): https://uptimeflare.pages.dev/
+The fork's `main` matches upstream except for this README. Contribution branches never include it.
 
-Some screenshots:
+## Contributions
 
-![Desktop, Light theme](docs/desktop.png)
+| Change | Upstream PR | Branch | Status |
+|---|---|---|---|
+| Fix "Uptimeflare" → "UptimeFlare" in the default footer | [lyc8503/UptimeFlare#225](https://github.com/lyc8503/UptimeFlare/pull/225) | `fix/footer-spelling` | Open |
+| Configurable date/time display: fixed time zone, format patterns, time zone notice | [lyc8503/UptimeFlare#226](https://github.com/lyc8503/UptimeFlare/pull/226) | `feat/datetime-format` | Open |
+| Server-rendered page metadata and footer, for search engines and link previews | Not opened yet | – | Planned, once search results are verified |
 
-## ⚡Quickstart / 📄Documentation
+### Configurable date/time display ([#226](https://github.com/lyc8503/UptimeFlare/pull/226))
+Optional `pageConfig.dateTime` setting:
+- **Fixed time zone:** a fixed IANA zone for all visitors, or each visitor's local time (the default).
+- **Format patterns:** moment-style patterns such as `D MMM YYYY [at] h:mm:ss A`, applied to the status page, the incidents page, the response-time charts and notifications.
+- **Time zone notice:** an ⓘ icon next to "Last updated" always says which time zone the times are in. The notice is translated into all UI languages.
 
-Please refer to [Wiki](https://github.com/lyc8503/UptimeFlare/wiki)
+The formatter is dependency-free and built on `Intl`.
 
-## 🚀Upgrade existing deployments
+### Server-rendered metadata and footer (planned)
+Upstream renders the whole app client-side (`NoSsr`), so search engines and link-preview crawlers get a page with no title, description, favicon or text. The fix:
+- server-renders the `<head>` metadata: title, description, canonical URL, Open Graph/Twitter tags and site-name structured data, through an optional `pageConfig.meta`;
+- server-renders the footer.
 
-Get the latest features right away with [simple upgrade process](https://github.com/lyc8503/UptimeFlare/wiki/Synchronize-updates-from-upstream)
+It has been live on [uptime.promeni.bg](https://uptime.promeni.bg) since October 2026. The upstream PR will follow once Google's search results confirm the improvement.
 
-## ⚙️Docs for developer
+## Working on this fork
 
-To contribute new features or customize your deployment furthermore, see [here](https://github.com/lyc8503/UptimeFlare/wiki/How-to-develop).
+1. Keep `main` in sync with upstream: "Sync fork" on GitHub, or `git fetch upstream && git merge upstream/main`.
+2. Cut each contribution branch from **upstream** `main`: `git checkout -b <branch> upstream/main`.
+3. Bring in the change from the private repo, leaving out its `uptime.config.ts`, `README.md` and any site-specific assets. **Never push deployment configuration to this fork.**
+4. Verify (lint, `tsc`, both builds, a local run), then open a draft PR against `lyc8503/UptimeFlare` and add it to the table above.
 
-## New features (TODOs)
+## License
 
-- [x] Specify region for monitors
-- [x] TCP `opened` promise
-- [x] Use apprise to support various notification channels
-- [x] ~~Telegram example~~
-- [x] ~~[Bark](https://bark.day.app) example~~
-- [x] ~~Email notification via Cloudflare Email Workers~~
-- [x] Improve docs by providing simple examples
-- [x] Notification grace period
-- [ ] SSL certificate checks
-- [x] ~~Self-host Dockerfile~~
-- [x] Incident history
-- [x] Improve `checkLocationWorkerRoute` and fix possible `proxy failed`
-- [x] Groups
-- [x] Remove old incidents
-- [x] ~~Known issue~~: `fetch` doesn't support non-standard port (resolved after CF update)
-- [x] Compatibility date update
-- [x] Scheduled Maintenance
-- [x] Add docs for dev
-- [x] Migration to Terraform Cloudflare provider version 5.x
-- [x] Cloudflare D1 database
-- [x] Scheduled maintenances (via IIFE)
-- [x] Simpler config example
-- [x] Upcoming maintenances
-- [x] Universal Webhook upgrade
-- [x] i18n...? (maybe)
-- [ ] ICMP via proxy?
-- [x] Add default UA
-- [x] Customizable footer
-- [x] New header logo
-- [x] Improve CPU time usage
-- [x] Local deployment (docs WIP)
+UptimeFlare is licensed under the [Apache License 2.0](LICENSE). The changes in this fork's branches are offered upstream under the same license.
